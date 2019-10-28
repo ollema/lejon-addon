@@ -1,0 +1,8 @@
+## Interface: 11302
+## Title: Lejon Addon
+## Notes: The official LKS Addon for Classic WoW
+## Author: Grift
+## Version: @project-version@
+## SavedVariablesPerCharacter: LejonInterrupt
+## X-Curse-Project-ID: 349435
+LejonAddon.lua

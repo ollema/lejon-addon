@@ -1,0 +1,5 @@
+package-as: LejonAddon
+enable-nolib-creation: no
+ignore:
+    - README.md
+    - LICENSE
