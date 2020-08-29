@@ -1,4 +1,4 @@
-## Interface: 11302
+## Interface: 11305
 ## Title: Lejon Addon
 ## Notes: The official LKS Addon for Classic WoW
 ## Author: Grift
