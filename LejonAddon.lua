@@ -72,14 +72,14 @@ local cthunClassColors = {
 
 local cthunPlayerName, _ = UnitName("player")
 local cthunBackdrop = {
-    bgFile = "Interface\\AddOns\\LejonAddon\\CthunImages\\CThun_Positioning_Melee_Stack.tga",
+    bgFile = "Interface\\AddOns\\LejonAddon\\CthunImages\\cthunMap.tga",
     edgeFile = "",
     tile = false,
     edgeSize = 0,
     insets = {left = 0, right = 0, top = 0, bottom = 0}
 }
 
-local cthunFrame = CreateFrame("Frame", "Cthun_room", UIParent)
+local cthunFrame = CreateFrame("Frame", "cthunFrame", UIParent)
 cthunFrame:EnableMouse(true)
 cthunFrame:SetMovable(true)
 cthunFrame:SetResizable(true)
@@ -108,7 +108,7 @@ local function Resizer(frame)
 end
 
 local function ResizeFrame(frame)
-    local resizeFrame = CreateFrame("Frame", "CthunResize", frame)
+    local resizeFrame = CreateFrame("Frame", "cthunResize", frame)
     resizeFrame:SetPoint("BottomRight", frame, "BottomRight", -8, 7)
     resizeFrame:SetWidth(16)
     resizeFrame:SetHeight(16)
@@ -144,7 +144,7 @@ local function ResizeFrame(frame)
         end
         frame:StopMovingOrSizing()
     end)
-    local scrollFrame = CreateFrame("ScrollFrame", "CthunScroll", frame)
+    local scrollFrame = CreateFrame("ScrollFrame", "cthunScroll", frame)
     scrollFrame:SetWidth(Width)
     scrollFrame:SetHeight(Height)
     scrollFrame:SetPoint("Topleft", frame, "Topleft", 0, 0)
@@ -153,7 +153,7 @@ end
 
 ResizeFrame(cthunFrame)
 
-local opacitySlider = CreateFrame("Slider", "MySlider1", cthunFrame, "OptionsSliderTemplate")
+local opacitySlider = CreateFrame("Slider", "opacitySlider", cthunFrame, "OptionsSliderTemplate")
 opacitySlider:SetPoint("BOTTOM", cthunFrame, "BOTTOMLEFT", 80, 6)
 opacitySlider:SetMinMaxValues(0.25, 1.00)
 opacitySlider:SetValue(1.00)
@@ -166,26 +166,26 @@ opacitySlider:SetScript("OnValueChanged", function(self)
     cthunFrame:SetAlpha(value)
 end)
 
-local cthunHeader = CreateFrame("Frame", "cthunHeader", cthunFrame)
+local cthunHeader = CreateFrame("Frame", "cthunLKSHeader", cthunFrame)
 cthunHeader:SetPoint("TOP", cthunFrame, "TOP", 0, 12)
 cthunHeader:SetWidth(256)
 cthunHeader:SetHeight(64)
 cthunHeader:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Header"})
 
-local resizeAnchor = CreateFrame("Frame", nil, cthunFrame)
-resizeAnchor:SetWidth(256)
-resizeAnchor:SetHeight(64)
-resizeAnchor:SetPoint("TOP", cthunFrame, "TOP", 0, 12)
-resizeAnchor:EnableMouse(true)
-resizeAnchor:SetScript("OnMouseDown", function() cthunFrame:StartMoving() end)
-resizeAnchor:SetScript("OnMouseUp", function() cthunFrame:StopMovingOrSizing() end)
-resizeAnchor:SetScript("OnHide", function() cthunFrame:StopMovingOrSizing() end)
+local dragAnchor = CreateFrame("Frame", "dragAnchor", cthunFrame)
+dragAnchor:SetWidth(256)
+dragAnchor:SetHeight(64)
+dragAnchor:SetPoint("TOP", cthunFrame, "TOP", 0, 12)
+dragAnchor:EnableMouse(true)
+dragAnchor:SetScript("OnMouseDown", function() cthunFrame:StartMoving() end)
+dragAnchor:SetScript("OnMouseUp", function() cthunFrame:StopMovingOrSizing() end)
+dragAnchor:SetScript("OnHide", function() cthunFrame:StopMovingOrSizing() end)
 
 local cthunHeaderText = cthunHeader:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 cthunHeaderText:SetPoint("CENTER", cthunHeader, "CENTER", 0, 12)
 cthunHeaderText:SetText("LKS C'Thun")
 
-local closeButton = CreateFrame("Button", "Close_button", cthunFrame)
+local closeButton = CreateFrame("Button", "closeButton", cthunFrame)
 closeButton:SetPoint("TOPRIGHT", cthunFrame, "TOPRIGHT", -5, -5)
 closeButton:SetHeight(32)
 closeButton:SetWidth(32)
@@ -197,15 +197,15 @@ closeButton:SetScript("OnClick", function() cthunFrame:Hide(); end)
 
 -- Create dot frames
 for i = 1, 40 do
-    local dot = CreateFrame("Button", "Dot_" .. i, cthunFrame)
+    dot = CreateFrame("Button", "CthunDot_" .. i, cthunFrame)
     dot:SetPoint("CENTER", cthunFrame, "CENTER", cthunPos[i][1], cthunPos[i][2])
     dot:EnableMouse(true)
     dot:SetFrameLevel(dot:GetFrameLevel() + 3)
-    local tooltip = CreateFrame("GameTooltip", "Tooltip_" .. i, nil, "GameTooltipTemplate")
-    local texdot = dot:CreateTexture("Texture_" .. i, "OVERLAY")
+    tooltip = CreateFrame("GameTooltip", "CthunTooltip_" .. i, nil, "GameTooltipTemplate")
+    texdot = dot:CreateTexture("CthunTexture_" .. i, "OVERLAY")
     dot.texture = texdot
     texdot:SetAllPoints(dot)
-    texdot:SetTexture("Interface\\AddOns\\LejonAddon\\CthunImages\\playerdot.tga")
+    texdot:SetTexture("Interface\\AddOns\\LejonAddon\\CthunImages\\dots.tga")
     texdot:Hide()
     dot:SetScript("OnEnter", function()
         tooltip:SetOwner(dot, "ANCHOR_RIGHT")
@@ -307,13 +307,13 @@ local function newAssignments()
     end
 end
 
-local function drawAssignments()
+function drawAssignments()
     wipeAssignments()
     newAssignments()
     for i = 1, 8 do
         for j = 1, 5 do
             local x = ((i - 1) * 5) + j
-            drawAssignment(_G["Dot_" .. x], _G["Tooltip_" .. x], _G["Texture_" .. x], assignments[i][j][1], strlower(assignments[i][j][2]))
+            drawAssignment(_G["CthunDot_" .. x], _G["CthunTooltip_" .. x], _G["CthunTexture_" .. x], assignments[i][j][1], strlower(assignments[i][j][2]))
         end
     end
 end
