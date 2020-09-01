@@ -1,7 +1,7 @@
 -- ----------------------------------------------------------------------------
 -- cthun map
 -- ----------------------------------------------------------------------------
-local dotPos = {
+local cthunPos = {
     -- group 1
     [1] = {0.5, 58}, -- melee cthun
     [2] = {0.5, 69}, -- melee tent
@@ -59,7 +59,7 @@ local dotPos = {
     [40] = {-24.5, -164} -- healer/ranged 2
 }
 
-local classColors = {
+local cthunClassColors = {
     ["warrior"] = {0.68, 0.51, 0.33},
     ["rogue"] = {1.0, 0.96, 0.31},
     ["mage"] = {0.21, 0.60, 0.74},
@@ -70,140 +70,138 @@ local classColors = {
     ["shaman"] = {0.0, 0.34, 0.77}
 }
 
-local Cthun_PlayerName, _ = UnitName("player")
-local backdrop = {
-    bgFile = "Interface\\AddOns\\LejonAddon\\CthunImages\\CThun_Positioning.tga",
+local cthunPlayerName, _ = UnitName("player")
+local cthunBackdrop = {
+    bgFile = "Interface\\AddOns\\LejonAddon\\CthunImages\\CThun_Positioning_Melee_Stack.tga",
     edgeFile = "",
     tile = false,
     edgeSize = 0,
     insets = {left = 0, right = 0, top = 0, bottom = 0}
 }
 
-local frame = CreateFrame("Frame", "Cthun_room", UIParent)
-frame:EnableMouse(true)
-frame:SetMovable(true)
-frame:SetResizable(true)
-frame:SetFrameStrata("FULLSCREEN")
-frame:SetHeight(512)
-frame:SetWidth(512)
-frame:SetScale(1)
-frame:SetPoint("CENTER", 0, 0)
-frame:SetBackdrop(backdrop)
-frame:SetAlpha(1.00)
-frame.x = frame:GetLeft()
-frame.y = (frame:GetTop() - frame:GetHeight())
-frame:RegisterEvent("GROUP_ROSTER_UPDATE")
-frame:SetScript("OnEvent", function() fillGrid() end)
-frame:Hide()
+local cthunFrame = CreateFrame("Frame", "Cthun_room", UIParent)
+cthunFrame:EnableMouse(true)
+cthunFrame:SetMovable(true)
+cthunFrame:SetResizable(true)
+cthunFrame:SetFrameStrata("FULLSCREEN")
+cthunFrame:SetHeight(512)
+cthunFrame:SetWidth(512)
+cthunFrame:SetScale(1)
+cthunFrame:SetPoint("CENTER", 0, 0)
+cthunFrame:SetBackdrop(cthunBackdrop)
+cthunFrame:SetAlpha(1.00)
+cthunFrame.x = cthunFrame:GetLeft()
+cthunFrame.y = (cthunFrame:GetTop() - cthunFrame:GetHeight())
+cthunFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+cthunFrame:SetScript("OnEvent", function() drawAssignments() end)
+cthunFrame:Hide()
 
-local resizeframe
-local Width = frame:GetWidth()
-local Height = frame:GetHeight()
+local resizeFrame
+local Width = cthunFrame:GetWidth()
+local Height = cthunFrame:GetHeight()
 
 local function Resizer(frame)
     local s = frame:GetWidth() / Width
     local childrens = {frame:GetChildren()}
-    for _, child in ipairs(childrens) do if child ~= resizeframe then child:SetScale(s) end end
+    for _, child in ipairs(childrens) do if child ~= resizeFrame then child:SetScale(s) end end
     frame:SetHeight(Height * s)
 end
 
 local function ResizeFrame(frame)
-    resizeframe = CreateFrame("Frame", "CthunResize", frame)
-    resizeframe:SetPoint("BottomRight", frame, "BottomRight", -8, 7)
-    resizeframe:SetWidth(16)
-    resizeframe:SetHeight(16)
-    resizeframe:SetFrameLevel(frame:GetFrameLevel() + 7)
-    resizeframe:EnableMouse(true)
-    local resizetexture = resizeframe:CreateTexture(nil, "Artwork")
-    resizetexture:SetPoint("TopLeft", resizeframe, "TopLeft", 0, 0)
-    resizetexture:SetWidth(16)
-    resizetexture:SetHeight(16)
-    resizetexture:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+    local resizeFrame = CreateFrame("Frame", "CthunResize", frame)
+    resizeFrame:SetPoint("BottomRight", frame, "BottomRight", -8, 7)
+    resizeFrame:SetWidth(16)
+    resizeFrame:SetHeight(16)
+    resizeFrame:SetFrameLevel(frame:GetFrameLevel() + 7)
+    resizeFrame:EnableMouse(true)
+    local resizeTexture = resizeFrame:CreateTexture(nil, "Artwork")
+    resizeTexture:SetPoint("TopLeft", resizeFrame, "TopLeft", 0, 0)
+    resizeTexture:SetWidth(16)
+    resizeTexture:SetHeight(16)
+    resizeTexture:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
     frame:SetMaxResize(1024, 1024)
     frame:SetMinResize(256, 256)
     frame:SetResizable(true)
-    resizeframe:SetScript("OnEnter", function(self) resizetexture:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight") end)
-    resizeframe:SetScript("OnLeave", function(self) resizetexture:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up") end)
-    resizeframe:SetScript("OnMouseDown", function(self, button)
+    resizeFrame:SetScript("OnEnter", function(self) resizeTexture:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight") end)
+    resizeFrame:SetScript("OnLeave", function(self) resizeTexture:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up") end)
+    resizeFrame:SetScript("OnMouseDown", function(self, button)
         if button == "RightButton" then
             frame:SetWidth(Width)
             frame:SetHeight(Height)
         else
-            resizetexture:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+            resizeTexture:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
             frame:StartSizing("Right")
         end
     end)
-    resizeframe:SetScript("OnMouseUp", function(self, button)
+    resizeFrame:SetScript("OnMouseUp", function(self, button)
         local x, y = GetCursorPosition()
         local fx = self:GetLeft() * self:GetEffectiveScale()
         local fy = self:GetBottom() * self:GetEffectiveScale()
         if x >= fx and x <= (fx + self:GetWidth()) and y >= fy and y <= (fy + self:GetHeight()) then
-            resizetexture:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+            resizeTexture:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
         else
-            resizetexture:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+            resizeTexture:SetTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
         end
         frame:StopMovingOrSizing()
     end)
-    local scrollframe = CreateFrame("ScrollFrame", "CthunScroll", frame)
-    scrollframe:SetWidth(Width)
-    scrollframe:SetHeight(Height)
-    scrollframe:SetPoint("Topleft", frame, "Topleft", 0, 0)
+    local scrollFrame = CreateFrame("ScrollFrame", "CthunScroll", frame)
+    scrollFrame:SetWidth(Width)
+    scrollFrame:SetHeight(Height)
+    scrollFrame:SetPoint("Topleft", frame, "Topleft", 0, 0)
     frame:SetScript("OnSizeChanged", function(self) Resizer(frame) end)
 end
 
-ResizeFrame(frame)
+ResizeFrame(cthunFrame)
 
-local OpacitySlider = CreateFrame("Slider", "MySlider1", frame, "OptionsSliderTemplate")
-OpacitySlider:SetPoint("BOTTOM", frame, "BOTTOMLEFT", 80, 6)
-OpacitySlider:SetMinMaxValues(0.25, 1.00)
-OpacitySlider:SetValue(1.00)
-OpacitySlider:SetValueStep(0.05)
-getglobal(OpacitySlider:GetName() .. 'Low'):SetText("")
-getglobal(OpacitySlider:GetName() .. 'High'):SetText("")
-getglobal(OpacitySlider:GetName() .. 'Text'):SetText('Opacity')
-OpacitySlider:SetScript("OnValueChanged", function(self)
-    local value = OpacitySlider:GetValue()
-    frame:SetAlpha(value)
+local opacitySlider = CreateFrame("Slider", "MySlider1", cthunFrame, "OptionsSliderTemplate")
+opacitySlider:SetPoint("BOTTOM", cthunFrame, "BOTTOMLEFT", 80, 6)
+opacitySlider:SetMinMaxValues(0.25, 1.00)
+opacitySlider:SetValue(1.00)
+opacitySlider:SetValueStep(0.05)
+getglobal(opacitySlider:GetName() .. 'Low'):SetText("")
+getglobal(opacitySlider:GetName() .. 'High'):SetText("")
+getglobal(opacitySlider:GetName() .. 'Text'):SetText('Opacity')
+opacitySlider:SetScript("OnValueChanged", function(self)
+    local value = opacitySlider:GetValue()
+    cthunFrame:SetAlpha(value)
 end)
 
-local CthunHeader = CreateFrame("Frame", "CthunHeader", frame)
-CthunHeader:SetPoint("TOP", frame, "TOP", 0, 12)
-CthunHeader:SetWidth(256)
-CthunHeader:SetHeight(64)
-CthunHeader:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Header"})
+local cthunHeader = CreateFrame("Frame", "cthunHeader", cthunFrame)
+cthunHeader:SetPoint("TOP", cthunFrame, "TOP", 0, 12)
+cthunHeader:SetWidth(256)
+cthunHeader:SetHeight(64)
+cthunHeader:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Header"})
 
-local drag = CreateFrame("Frame", nil, frame)
-drag:SetWidth(256)
-drag:SetHeight(64)
-drag:SetPoint("TOP", frame, "TOP", 0, 12)
-drag:EnableMouse(true)
-drag:SetScript("OnMouseDown", function() frame:StartMoving() end)
+local resizeAnchor = CreateFrame("Frame", nil, cthunFrame)
+resizeAnchor:SetWidth(256)
+resizeAnchor:SetHeight(64)
+resizeAnchor:SetPoint("TOP", cthunFrame, "TOP", 0, 12)
+resizeAnchor:EnableMouse(true)
+resizeAnchor:SetScript("OnMouseDown", function() cthunFrame:StartMoving() end)
+resizeAnchor:SetScript("OnMouseUp", function() cthunFrame:StopMovingOrSizing() end)
+resizeAnchor:SetScript("OnHide", function() cthunFrame:StopMovingOrSizing() end)
 
-drag:SetScript("OnMouseUp", function() frame:StopMovingOrSizing() end)
+local cthunHeaderText = cthunHeader:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+cthunHeaderText:SetPoint("CENTER", cthunHeader, "CENTER", 0, 12)
+cthunHeaderText:SetText("LKS C'Thun")
 
-drag:SetScript("OnHide", function() frame:StopMovingOrSizing() end)
-
-local CthunHeaderText = CthunHeader:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-CthunHeaderText:SetPoint("CENTER", CthunHeader, "CENTER", 0, 12)
-CthunHeaderText:SetText("LKS C'Thun")
-
-local button = CreateFrame("Button", "Close_button", frame)
-button:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -5, -5)
-button:SetHeight(32)
-button:SetWidth(32)
-button:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-button:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
-button:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
-button:SetScript("OnLoad", function() button:RegisterForClicks("AnyUp") end)
-button:SetScript("OnClick", function() frame:Hide(); end)
+local closeButton = CreateFrame("Button", "Close_button", cthunFrame)
+closeButton:SetPoint("TOPRIGHT", cthunFrame, "TOPRIGHT", -5, -5)
+closeButton:SetHeight(32)
+closeButton:SetWidth(32)
+closeButton:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
+closeButton:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
+closeButton:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
+closeButton:SetScript("OnLoad", function() closeButton:RegisterForClicks("AnyUp") end)
+closeButton:SetScript("OnClick", function() cthunFrame:Hide(); end)
 
 -- Create dot frames
 for i = 1, 40 do
-    dot = CreateFrame("Button", "Dot_" .. i, frame)
-    dot:SetPoint("CENTER", frame, "CENTER", dotPos[i][1], dotPos[i][2])
+    local dot = CreateFrame("Button", "Dot_" .. i, cthunFrame)
+    dot:SetPoint("CENTER", cthunFrame, "CENTER", cthunPos[i][1], cthunPos[i][2])
     dot:EnableMouse(true)
     dot:SetFrameLevel(dot:GetFrameLevel() + 3)
-    tooltip = CreateFrame("GameTooltip", "Tooltip_" .. i, nil, "GameTooltipTemplate")
+    local tooltip = CreateFrame("GameTooltip", "Tooltip_" .. i, nil, "GameTooltipTemplate")
     local texdot = dot:CreateTexture("Texture_" .. i, "OVERLAY")
     dot.texture = texdot
     texdot:SetAllPoints(dot)
@@ -217,8 +215,8 @@ for i = 1, 40 do
     dot:SetScript("OnLeave", function() tooltip:Hide() end)
 end
 
-function newDot(dot, tooltip, texture, name, class)
-    if (Cthun_PlayerName == name) then
+local function drawAssignment(dot, tooltip, texture, name, class)
+    if (cthunPlayerName == name) then
         dot:SetWidth(28)
         dot:SetHeight(28)
     else
@@ -227,7 +225,7 @@ function newDot(dot, tooltip, texture, name, class)
     end
 
     if name ~= "Empty" then
-        texture:SetVertexColor(classColors[class][1], classColors[class][2], classColors[class][3], 1.0)
+        texture:SetVertexColor(cthunClassColors[class][1], cthunClassColors[class][2], cthunClassColors[class][3], 1.0)
         texture:Show()
     else
         texture:Hide()
@@ -242,7 +240,7 @@ function newDot(dot, tooltip, texture, name, class)
     dot:SetScript("OnLeave", function() tooltip:Hide() end)
 end
 
-local dotRes = {
+local assignments = {
     {{"Empty", "Empty"}, {"Empty", "Empty"}, {"Empty", "Empty"}, {"Empty", "Empty"}, {"Empty", "Empty"}}, -- group 1
     {{"Empty", "Empty"}, {"Empty", "Empty"}, {"Empty", "Empty"}, {"Empty", "Empty"}, {"Empty", "Empty"}}, -- group 2
     {{"Empty", "Empty"}, {"Empty", "Empty"}, {"Empty", "Empty"}, {"Empty", "Empty"}, {"Empty", "Empty"}}, -- group 3
@@ -253,74 +251,74 @@ local dotRes = {
     {{"Empty", "Empty"}, {"Empty", "Empty"}, {"Empty", "Empty"}, {"Empty", "Empty"}, {"Empty", "Empty"}}  -- group 8
 }
 
-function getRaidInfo()
+local function newAssignments()
     for i = 1, 40 do
         local name, _, subgroup, _, class = GetRaidRosterInfo(i);
 
         if (class == "Rogue") then
-            if dotRes[subgroup][1][1] == "Empty" or dotRes[subgroup][1][1] == name then
-                dotRes[subgroup][1] = {name, class}
-            elseif dotRes[subgroup][2][1] == "Empty" or dotRes[subgroup][2][1] == name then
-                dotRes[subgroup][2] = {name, class}
-            elseif dotRes[subgroup][3][1] == "Empty" or dotRes[subgroup][3][1] == name then
-                dotRes[subgroup][3] = {name, class}
-            elseif dotRes[subgroup][4][1] == "Empty" or dotRes[subgroup][4][1] == name then
-                dotRes[subgroup][4] = {name, class}
+            if assignments[subgroup][1][1] == "Empty" or assignments[subgroup][1][1] == name then
+                assignments[subgroup][1] = {name, class}
+            elseif assignments[subgroup][2][1] == "Empty" or assignments[subgroup][2][1] == name then
+                assignments[subgroup][2] = {name, class}
+            elseif assignments[subgroup][3][1] == "Empty" or assignments[subgroup][3][1] == name then
+                assignments[subgroup][3] = {name, class}
+            elseif assignments[subgroup][4][1] == "Empty" or assignments[subgroup][4][1] == name then
+                assignments[subgroup][4] = {name, class}
             else
-                dotRes[subgroup][5] = {name, class}
+                assignments[subgroup][5] = {name, class}
             end
         elseif (class == "Warrior") then
-            if dotRes[subgroup][2][1] == "Empty" or dotRes[subgroup][2][1] == name then
-                dotRes[subgroup][2] = {name, class}
-            elseif dotRes[subgroup][1][1] == "Empty" or dotRes[subgroup][1][1] == name then
-                dotRes[subgroup][1] = {name, class}
-            elseif dotRes[subgroup][3][1] == "Empty" or dotRes[subgroup][3][1] == name then
-                dotRes[subgroup][3] = {name, class}
-            elseif dotRes[subgroup][4][1] == "Empty" or dotRes[subgroup][4][1] == name then
-                dotRes[subgroup][4] = {name, class}
+            if assignments[subgroup][2][1] == "Empty" or assignments[subgroup][2][1] == name then
+                assignments[subgroup][2] = {name, class}
+            elseif assignments[subgroup][1][1] == "Empty" or assignments[subgroup][1][1] == name then
+                assignments[subgroup][1] = {name, class}
+            elseif assignments[subgroup][3][1] == "Empty" or assignments[subgroup][3][1] == name then
+                assignments[subgroup][3] = {name, class}
+            elseif assignments[subgroup][4][1] == "Empty" or assignments[subgroup][4][1] == name then
+                assignments[subgroup][4] = {name, class}
             else
-                dotRes[subgroup][5] = {name, class}
+                assignments[subgroup][5] = {name, class}
             end
         elseif (class == "Shaman" or name == "Ryggfläsk") then
-            if dotRes[subgroup][3][1] == "Empty" or dotRes[subgroup][3][1] == name then
-                dotRes[subgroup][3] = {name, class}
-            elseif dotRes[subgroup][4][1] == "Empty" or dotRes[subgroup][4][1] == name then
-                dotRes[subgroup][4] = {name, class}
-            elseif dotRes[subgroup][5][1] == "Empty" or dotRes[subgroup][5][1] == name then
-                dotRes[subgroup][5] = {name, class}
-            elseif dotRes[subgroup][2][1] == "Empty" or dotRes[subgroup][2][1] == name then
-                dotRes[subgroup][2] = {name, class}
+            if assignments[subgroup][3][1] == "Empty" or assignments[subgroup][3][1] == name then
+                assignments[subgroup][3] = {name, class}
+            elseif assignments[subgroup][4][1] == "Empty" or assignments[subgroup][4][1] == name then
+                assignments[subgroup][4] = {name, class}
+            elseif assignments[subgroup][5][1] == "Empty" or assignments[subgroup][5][1] == name then
+                assignments[subgroup][5] = {name, class}
+            elseif assignments[subgroup][2][1] == "Empty" or assignments[subgroup][2][1] == name then
+                assignments[subgroup][2] = {name, class}
             else
-                dotRes[subgroup][1] = {name, class}
+                assignments[subgroup][1] = {name, class}
             end
         elseif (class == "Priest" or class == "Druid" or class == "Mage" or class == "Warlock" or class == "Hunter") then
-            if dotRes[subgroup][5][1] == "Empty" or dotRes[subgroup][5][1] == name then
-                dotRes[subgroup][5] = {name, class}
-            elseif dotRes[subgroup][4][1] == "Empty" or dotRes[subgroup][4][1] == name then
-                dotRes[subgroup][4] = {name, class}
-            elseif dotRes[subgroup][3][1] == "Empty" or dotRes[subgroup][3][1] == name then
-                dotRes[subgroup][3] = {name, class}
-            elseif dotRes[subgroup][2][1] == "Empty" or dotRes[subgroup][2][1] == name then
-                dotRes[subgroup][2] = {name, class}
+            if assignments[subgroup][5][1] == "Empty" or assignments[subgroup][5][1] == name then
+                assignments[subgroup][5] = {name, class}
+            elseif assignments[subgroup][4][1] == "Empty" or assignments[subgroup][4][1] == name then
+                assignments[subgroup][4] = {name, class}
+            elseif assignments[subgroup][3][1] == "Empty" or assignments[subgroup][3][1] == name then
+                assignments[subgroup][3] = {name, class}
+            elseif assignments[subgroup][2][1] == "Empty" or assignments[subgroup][2][1] == name then
+                assignments[subgroup][2] = {name, class}
             else
-                dotRes[subgroup][1] = {name, class}
+                assignments[subgroup][1] = {name, class}
             end
         end
     end
 end
 
-function fillGrid()
-    wipeReserves()
-    getRaidInfo()
+local function drawAssignments()
+    wipeAssignments()
+    newAssignments()
     for i = 1, 8 do
         for j = 1, 5 do
             local x = ((i - 1) * 5) + j
-            newDot(_G["Dot_" .. x], _G["Tooltip_" .. x], _G["Texture_" .. x], dotRes[i][j][1], strlower(dotRes[i][j][2]))
+            drawAssignment(_G["Dot_" .. x], _G["Tooltip_" .. x], _G["Texture_" .. x], assignments[i][j][1], strlower(assignments[i][j][2]))
         end
     end
 end
 
-function wipeReserves() for i = 1, 8 do for j = 1, 5 do for k = 1, 2 do dotRes[i][j][k] = "Empty" end end end end
+function wipeAssignments() for i = 1, 8 do for j = 1, 5 do for k = 1, 2 do assignments[i][j][k] = "Empty" end end end end
 
 -- ----------------------------------------------------------------------------
 -- emotes
@@ -428,11 +426,11 @@ SLASH_LKS1 = "/lks";
 SLASH_LKS2 = "/lejon";
 SlashCmdList["LKS"] = function(msg)
     if msg == "cthun" then
-        frame:Show()
-        fillGrid()
+        cthunFrame:Show()
+        drawAssignments()
     elseif msg == "cthun reset" then
-        frame:SetWidth(Width)
-        frame:SetHeight(Height)
+        cthunFrame:SetWidth(Width)
+        cthunFrame:SetHeight(Height)
     elseif msg == "interrupt enable" then
         LejonInterrupt = true
         print("LKS interrupt announce is enabled!")
