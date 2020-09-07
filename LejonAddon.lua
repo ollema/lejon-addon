@@ -183,7 +183,7 @@ dragAnchor:SetScript("OnHide", function() cthunFrame:StopMovingOrSizing() end)
 
 local cthunHeaderText = cthunHeader:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 cthunHeaderText:SetPoint("CENTER", cthunHeader, "CENTER", 0, 12)
-cthunHeaderText:SetText("LKS C'Thun")
+cthunHeaderText:SetText("LKS C'Thun v0.6")
 
 local closeButton = CreateFrame("Button", "closeButton", cthunFrame)
 closeButton:SetPoint("TOPRIGHT", cthunFrame, "TOPRIGHT", -5, -5)
