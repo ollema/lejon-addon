@@ -67,7 +67,8 @@ local cthunClassColors = {
     ["hunter"] = {0.47, 0.73, 0.25},
     ["priest"] = {1.0, 1.00, 1.00},
     ["druid"] = {1.0, 0.49, 0.04},
-    ["shaman"] = {0.0, 0.34, 0.77}
+    ["shaman"] = {0.0, 0.34, 0.77},
+    ["paladin"] = {0.96, 0.55, 0.73},
 }
 
 local cthunPlayerName, _ = UnitName("player")
@@ -183,7 +184,7 @@ dragAnchor:SetScript("OnHide", function() cthunFrame:StopMovingOrSizing() end)
 
 local cthunHeaderText = cthunHeader:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 cthunHeaderText:SetPoint("CENTER", cthunHeader, "CENTER", 0, 12)
-cthunHeaderText:SetText("LKS C'Thun v0.6")
+cthunHeaderText:SetText("LKS C'Thun v0.7")
 
 local closeButton = CreateFrame("Button", "closeButton", cthunFrame)
 closeButton:SetPoint("TOPRIGHT", cthunFrame, "TOPRIGHT", -5, -5)
@@ -291,7 +292,7 @@ local function newAssignments()
             else
                 assignments[subgroup][1] = {name, class}
             end
-        elseif (class == "Priest" or class == "Druid" or class == "Mage" or class == "Warlock" or class == "Hunter") then
+        elseif (class == "Priest" or class == "Druid" or class == "Mage" or class == "Warlock" or class == "Hunter" or class == "Paladin") then
             if assignments[subgroup][5][1] == "Empty" or assignments[subgroup][5][1] == name then
                 assignments[subgroup][5] = {name, class}
             elseif assignments[subgroup][4][1] == "Empty" or assignments[subgroup][4][1] == name then
