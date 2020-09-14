@@ -3,6 +3,6 @@
 ## Notes: The official LKS Addon for Classic WoW
 ## Author: Grift
 ## Version: @project-version@
-## SavedVariablesPerCharacter: LejonInterrupt
+## SavedVariablesPerCharacter: LejonInterrupt, LejonAnnounce
 ## X-Curse-Project-ID: 349435
 LejonAddon.lua

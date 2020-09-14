@@ -184,7 +184,7 @@ dragAnchor:SetScript("OnHide", function() cthunFrame:StopMovingOrSizing() end)
 
 local cthunHeaderText = cthunHeader:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 cthunHeaderText:SetPoint("CENTER", cthunHeader, "CENTER", 0, 12)
-cthunHeaderText:SetText("LKS C'Thun v0.8")
+cthunHeaderText:SetText("LKS C'Thun v0.9")
 
 local closeButton = CreateFrame("Button", "closeButton", cthunFrame)
 closeButton:SetPoint("TOPRIGHT", cthunFrame, "TOPRIGHT", -5, -5)
@@ -268,7 +268,7 @@ local function newAssignments()
             else
                 assignments[subgroup][5] = {name, class}
             end
-        elseif (class == "Warrior") then
+        elseif (class == "Warrior" or name == "Ryggfläsk" or name == "Kryddpeppar" or name == "Dewy") then
             if assignments[subgroup][2][1] == "Empty" or assignments[subgroup][2][1] == name then
                 assignments[subgroup][2] = {name, class}
             elseif assignments[subgroup][1][1] == "Empty" or assignments[subgroup][1][1] == name then
@@ -280,7 +280,7 @@ local function newAssignments()
             else
                 assignments[subgroup][5] = {name, class}
             end
-        elseif (class == "Shaman" or name == "Ryggfläsk") then
+        elseif (class == "Shaman") then
             if assignments[subgroup][3][1] == "Empty" or assignments[subgroup][3][1] == name then
                 assignments[subgroup][3] = {name, class}
             elseif assignments[subgroup][4][1] == "Empty" or assignments[subgroup][4][1] == name then
@@ -396,10 +396,25 @@ function Emoticons_InsertEmoticons(msg)
 end
 
 -- ----------------------------------------------------------------------------
--- interrupt announce
+-- interrupt/cooldown announce
 -- ----------------------------------------------------------------------------
+LejonAurasList =
+{
+    ["Adrenaline Rush"] = "Adrenaline Rush",
+    ["Blade Flurry"] = "Blade Flurry",
+    ["Combustion"] = "Combustion",
+    ["Death Wish"] = "Death Wish",
+    ["Innervate"] = "Innervate",
+    ["Mind Quickening"] = "Mind Quickening Gem",
+    ["Nature's Swiftness"] = "Nature's Swiftness",
+    ["Power Infusion"] = "Power Infusion",
+    ["Rapid Fire"] = "Rapid Fire",
+    ["Ephemeral Power"] = "Talisman of Ephemeral Power",
+}
 local playerGUID = UnitGUID("player")
 local INTERRUPT_MESSAGE = "Interrupted %s's [%s]!"
+local CD_USED_ON_SELF_MESSAGE = "%s used!"
+local CD_USED_ON_OTHER_MESSAGE = "%s used on %s!"
 local f = CreateFrame("FRAME")
 f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 f:RegisterEvent("ADDON_LOADED")
@@ -407,17 +422,35 @@ f:SetScript("OnEvent", function(self, event, ...) self[event](self, ...) end)
 
 function f:ADDON_LOADED()
     if LejonInterrupt == nil then LejonInterrupt = true; end
+    if LejonAnnounce == nil then LejonAnnounce = true; end
     Emoticons_UpdateChatFilters();
 end
 
 function f:COMBAT_LOG_EVENT_UNFILTERED()
-    if not LejonInterrupt then return end
+    if not (LejonInterrupt or LejonAnnounce) then return end
+    local _, event, _, sourceGUID, sourceName, _, _, destGUID, destName, _, _, spellId, spellName  = CombatLogGetCurrentEventInfo()
 
-    local _, event, _, sourceGUID, _, _, _, _, destName, _, _, _, _, _, _, spellName = CombatLogGetCurrentEventInfo()
-    if not (event == "SPELL_INTERRUPT" and (sourceGUID == playerGUID or sourceGUID == UnitGUID('pet'))) then return end
+    if LejonInterrupt then
+        if (event == "SPELL_INTERRUPT" and (sourceGUID == playerGUID or sourceGUID == UnitGUID('pet'))) then
+            msg = string.format(INTERRUPT_MESSAGE, destName or UNKNOWN, spellName or UNKNOWN)
+            SendChatMessage(msg, "SAY")
+        end
+    end
 
-    msg = string.format(INTERRUPT_MESSAGE, destName or UNKNOWN, spellName or UNKNOWN)
-    SendChatMessage(msg, "SAY")
+    if LejonAnnounce then
+        if (event == "SPELL_AURA_APPLIED" and (sourceGUID == playerGUID)) then
+            for k, v in pairs(LejonAurasList) do
+                if k == spellName then
+                    if destName == sourceName then
+                        msg = string.format(CD_USED_ON_SELF_MESSAGE, v)
+                    else
+                        msg = string.format(CD_USED_ON_OTHER_MESSAGE, v, destName)
+                    end
+                    SendChatMessage(msg, "SAY")
+                end
+            end
+        end
+    end
 end
 
 -- ----------------------------------------------------------------------------
@@ -444,6 +477,18 @@ SlashCmdList["LKS"] = function(msg)
         else
             print("LKS interrupt announce is disabled!")
         end
+    elseif msg == "announce enable" then
+        LejonAnnounce = true
+        print("LKS cooldown announce is enabled!")
+    elseif msg == "announce disable" then
+        LejonAnnounce = false
+        print("LKS cooldown announce is disabled!")
+    elseif msg == "announce" then
+        if LejonAnnounce then
+            print("LKS cooldown announce is enabled!")
+        else
+            print("LKS cooldown announce is disabled!")
+        end
     elseif msg == "shout" then
         SendChatMessage("LEJON!", "yell")
         C_Timer.After(1.5, function() SendChatMessage("KOMMANDO!", "yell") end)
@@ -457,6 +502,9 @@ SlashCmdList["LKS"] = function(msg)
         print("|cff8d63ff/lks interrupt|r  -  show interrupt announcement status")
         print("|cff8d63ff/lks interrupt enable|r  -  enable interrupt announcement")
         print("|cff8d63ff/lks interrupt disable|r  -  disable interrupt announcement")
+        print("|cff8d63ff/lks announce|r  -  show cooldown announcement status")
+        print("|cff8d63ff/lks announce enable|r  -  enable cooldown announcement")
+        print("|cff8d63ff/lks announce disable|r  -  disable cooldown announcement")
         print("|cff8d63ff/lks shout|r")
         print("|cff8d63ff/lks live|r")
     end
