@@ -184,7 +184,7 @@ dragAnchor:SetScript("OnHide", function() cthunFrame:StopMovingOrSizing() end)
 
 local cthunHeaderText = cthunHeader:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 cthunHeaderText:SetPoint("CENTER", cthunHeader, "CENTER", 0, 12)
-cthunHeaderText:SetText("LKS C'Thun v0.9")
+cthunHeaderText:SetText("LKS C'Thun v0.10")
 
 local closeButton = CreateFrame("Button", "closeButton", cthunFrame)
 closeButton:SetPoint("TOPRIGHT", cthunFrame, "TOPRIGHT", -5, -5)
@@ -428,11 +428,11 @@ end
 
 function f:COMBAT_LOG_EVENT_UNFILTERED()
     if not (LejonInterrupt or LejonAnnounce) then return end
-    local _, event, _, sourceGUID, sourceName, _, _, destGUID, destName, _, _, spellId, spellName  = CombatLogGetCurrentEventInfo()
+    local _, event, _, sourceGUID, sourceName, _, _, destGUID, destName, _, _, spellId, spellName, _, extraSpellId, extraSpellName  = CombatLogGetCurrentEventInfo()
 
     if LejonInterrupt then
         if (event == "SPELL_INTERRUPT" and (sourceGUID == playerGUID or sourceGUID == UnitGUID('pet'))) then
-            msg = string.format(INTERRUPT_MESSAGE, destName or UNKNOWN, spellName or UNKNOWN)
+            msg = string.format(INTERRUPT_MESSAGE, destName or UNKNOWN, extraSpellName or UNKNOWN)
             SendChatMessage(msg, "SAY")
         end
     end
