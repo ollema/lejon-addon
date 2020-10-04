@@ -184,7 +184,7 @@ dragAnchor:SetScript("OnHide", function() cthunFrame:StopMovingOrSizing() end)
 
 local cthunHeaderText = cthunHeader:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 cthunHeaderText:SetPoint("CENTER", cthunHeader, "CENTER", 0, 12)
-cthunHeaderText:SetText("LKS C'Thun v0.10")
+cthunHeaderText:SetText("LKS C'Thun v0.11")
 
 local closeButton = CreateFrame("Button", "closeButton", cthunFrame)
 closeButton:SetPoint("TOPRIGHT", cthunFrame, "TOPRIGHT", -5, -5)
@@ -411,7 +411,18 @@ LejonAurasList =
     ["Rapid Fire"] = "Rapid Fire",
     ["Ephemeral Power"] = "Talisman of Ephemeral Power",
 }
+LejonSpellsList =
+{
+    ["Mana Tide Totem"] = "Mana Tide Totem",
+}
+LejonResurrections = {
+    "Ancestral Spirit",
+    "Rebirth",
+    "Redemption",
+    "Resurrection"
+}
 local playerGUID = UnitGUID("player")
+local RESURRECTION_MESSAGE = "Resurrecting %t"
 local INTERRUPT_MESSAGE = "Interrupted %s's [%s]!"
 local CD_USED_ON_SELF_MESSAGE = "%s used!"
 local CD_USED_ON_OTHER_MESSAGE = "%s used on %s!"
@@ -427,8 +438,27 @@ function f:ADDON_LOADED()
 end
 
 function f:COMBAT_LOG_EVENT_UNFILTERED()
-    if not (LejonInterrupt or LejonAnnounce) then return end
+    if not IsInInstance() then return end
+
+    local groupType = "SAY"
+    if (IsInGroup()) and (not IsInRaid()) then
+        groupType = "PARTY"
+    elseif (IsInGroup()) and (IsInRaid()) then
+        groupType = "RAID"
+    end
+    if not (groupType == "PARTY" or groupType == "RAID") then return end
+
     local _, event, _, sourceGUID, sourceName, _, _, destGUID, destName, _, _, spellId, spellName, _, extraSpellId, extraSpellName  = CombatLogGetCurrentEventInfo()
+
+    if (event == "SPELL_CAST_START" and (sourceGUID == playerGUID)) then
+        for i, ressName in ipairs(LejonResurrections) do
+            if ressName == spellName then
+                SendChatMessage(RESURRECTION_MESSAGE, groupType)
+            end
+        end
+    end
+
+    if not (LejonInterrupt or LejonAnnounce) then return end
 
     if LejonInterrupt then
         if (event == "SPELL_INTERRUPT" and (sourceGUID == playerGUID or sourceGUID == UnitGUID('pet'))) then
@@ -442,6 +472,17 @@ function f:COMBAT_LOG_EVENT_UNFILTERED()
             for k, v in pairs(LejonAurasList) do
                 if k == spellName then
                     if destName == sourceName then
+                        msg = string.format(CD_USED_ON_SELF_MESSAGE, v)
+                    else
+                        msg = string.format(CD_USED_ON_OTHER_MESSAGE, v, destName)
+                    end
+                    SendChatMessage(msg, "SAY")
+                end
+            end
+        elseif (event == "SPELL_CAST_SUCCESS" and (sourceGUID == playerGUID)) then
+            for k, v in pairs(LejonSpellsList) do
+                if k == spellName then
+                    if destName == sourceName or destName == nil then
                         msg = string.format(CD_USED_ON_SELF_MESSAGE, v)
                     else
                         msg = string.format(CD_USED_ON_OTHER_MESSAGE, v, destName)
